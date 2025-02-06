@@ -7,6 +7,8 @@ TARGET   ?= debug
 DOWNLOAD_URL_TEMPLATE_LOCAL  = http://localhost:$(PORT)/$(EXT_NAME).tar.gz
 DOWNLOAD_URL_TEMPLATE_GITHUB = https://github.com/dfinity/dfx-extensions/releases/download/{{tag}}/{{basename}}.{{archive-format}}
 
+all: install
+
 clean:
 	@rm -rf \
 		out www \
