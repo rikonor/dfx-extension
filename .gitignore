@@ -1,1 +1,4 @@
-/target
+target
+www
+out
+dfx-extension.tar.gz

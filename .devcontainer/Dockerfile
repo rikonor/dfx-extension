@@ -6,6 +6,29 @@ RUN \
         curl \
         git
 
+
+# Rust
+
+ARG RUST_TOOLCHAIN='1.84.0'
+
 RUN \
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- \
-        -y
+        -y \
+        --default-toolchain ${RUST_TOOLCHAIN}
+
+RUN \
+    curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | sh
+
+RUN \
+    /root/.cargo/bin/cargo binstall --locked miniserve
+
+
+# Dfx
+
+ARG DFX_VERSION='0.24.3'
+
+RUN \
+    curl -fsSL https://internetcomputer.org/install.sh | \
+        DFXVM_INIT_YES='1' \
+        DFX_VERSION=${DFX_VERSION} \
+            sh -s

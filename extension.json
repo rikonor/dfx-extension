@@ -1,0 +1,23 @@
+{
+    "name": "dfx-extension",
+    "version": "0.1.0",
+    "homepage": "https://github.com/dfinity/dfx-extensions",
+    "authors": "DFINITY",
+    "summary": "Toolkit for interacting with the Network Nervous System.",
+    "categories": [],
+    "keywords": [],
+    "dependencies": {
+        "dfx": ">=0.24.1"
+    },
+    "subcommands": {
+        "print": {
+            "about": "Prints a message",
+            "args": {
+                "message": {
+                    "about": "Message to print",
+                    "long": "message"
+                }
+            }
+        }
+    }
+}
