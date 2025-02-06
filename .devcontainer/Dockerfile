@@ -26,7 +26,7 @@ ARG MINISERVE_VERSION='0.28.0'
 RUN \
     /root/.cargo/bin/cargo binstall \
         --locked \
-        --version $(MINISERVE_VERSION) \
+        --version ${MINISERVE_VERSION} \
         miniserve
 
 
