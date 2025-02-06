@@ -19,8 +19,15 @@ RUN \
 RUN \
     curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | sh
 
+# miniserve
+
+ARG MINISERVE_VERSION='0.28.0'
+
 RUN \
-    /root/.cargo/bin/cargo binstall --locked miniserve
+    /root/.cargo/bin/cargo binstall \
+        --locked \
+        --version $(MINISERVE_VERSION) \
+        miniserve
 
 
 # Dfx
