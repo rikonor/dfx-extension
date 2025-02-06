@@ -1,16 +1,30 @@
-DFX ?= dfx
+DFX  ?= dfx
+PORT ?= 8123
 
 EXT_NAME ?= dfx-extension
 TARGET   ?= debug
 
+DOWNLOAD_URL_TEMPLATE_LOCAL  = http://localhost:$(PORT)/$(EXT_NAME).tar.gz
+DOWNLOAD_URL_TEMPLATE_GITHUB = https://github.com/dfinity/dfx-extensions/releases/download/{{tag}}/{{basename}}.{{archive-format}}
+
 clean:
 	rm -rf \
-		out www $(EXT_NAME).tar.gz
+		out www \
+		extension.json \
+		$(EXT_NAME).tar.gz 
 
 build:
 	cargo build
 
-bundle: build
+tmpl:
+	sed \
+		-e "s|{{NAME}}|$(EXT_NAME)|g" \
+		-e "s|{{VERSION}}|0.5.0|g" \
+		-e "s|{{HOMEPAGE}}|HOMEPAGE|g" \
+		-e "s|{{DOWNLOAD_URL_TEMPLATE}}|$(DOWNLOAD_URL_TEMPLATE_LOCAL)|g" \
+			extension.json.tmpl > extension.json
+
+bundle: build tmpl
 	mkdir -p out
 	cp target/$(TARGET)/$(EXT_NAME) out/$(EXT_NAME)
 	cp extension.json out/extension.json
@@ -24,12 +38,13 @@ bundle: build
 
 serve: bundle
 	miniserve www \
-		-p 8123
+		-p $(PORT)
 
 install: bundle
+	$(DFX) extension uninstall $(EXT_NAME) || :
 	$(DFX) extension install \
 		--install-as $(EXT_NAME) \
-			http://localhost:8123/extension.json
+			http://localhost:$(PORT)/extension.json
 
 run: install
 	$(DFX) $(EXT_NAME)

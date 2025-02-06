@@ -15,7 +15,7 @@ struct Cli {
 
 #[derive(Parser)]
 enum SubCommand {
-    Ping,
+    Print,
 }
 
 #[tokio::main]
