@@ -9,7 +9,7 @@ struct Cli {
     subcmd: SubCommand,
 
     /// Path to dfx cache
-    #[arg(long("dfx-cache-path"), env = "DFX_CACHE_PATH", global = true)]
+    #[arg(long("dfx-cache-path"), env = "DFX_CACHE_PATH")]
     cache: Option<PathBuf>,
 }
 

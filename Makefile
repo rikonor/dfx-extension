@@ -1,57 +1,81 @@
 DFX  ?= dfx
 PORT ?= 8123
 
-EXT_NAME ?= dfx-extension
-TARGET   ?= debug
+EXT_NAME 		   ?= dfx-extension
+EXT_NAME_INSTALLED ?= $(EXT_NAME)-ext
+EXT_VERSION		   ?= $(shell cargo metadata --format-version=1 | jq -r '.packages[] | select(.name == "$(EXT_NAME)") | .version')
 
 DOWNLOAD_URL_TEMPLATE_LOCAL  = http://localhost:$(PORT)/$(EXT_NAME).tar.gz
-DOWNLOAD_URL_TEMPLATE_GITHUB = https://github.com/dfinity/dfx-extensions/releases/download/{{tag}}/{{basename}}.{{archive-format}}
+DOWNLOAD_URL_TEMPLATE_GITHUB = https://github.com/rikonor/dfx-extension-$(EXT_NAME)/releases/download/{{tag}}/{{basename}}.{{archive-format}}
+
+CARGO_TARGET   ?=
+CARGO_RELEASE  ?=
+
+CARGO_TARGET_DIR   ?= target$(if $(CARGO_TARGET),/$(CARGO_TARGET))
+CARGO_ARTIFACT_DIR ?= $(CARGO_TARGET_DIR)/$(if $(CARGO_RELEASE),release,debug)
+
+EXT_MANIFEST_LOCAL  = dfx/extension.local.json
+EXT_MANIFEST_GITHUB = dfx/extension.json
+
+EXT_RELEASE  ?=
+EXT_MANIFEST ?= $(if $(EXT_RELEASE),$(EXT_MANIFEST_GITHUB),$(EXT_MANIFEST_LOCAL))
 
 all: install
 
 clean:
 	@rm -rf \
 		out www \
-		extension.json \
-		$(EXT_NAME).tar.gz 
+		*.tar.gz
 
 build:
-	cargo build
+	cargo build \
+		$(if $(CARGO_TARGET),--target $(CARGO_TARGET)) \
+		$(if $(CARGO_RELEASE),--release)
 
-tmpl:
+manifest:
 	@sed \
 		-e "s|{{NAME}}|$(EXT_NAME)|g" \
-		-e "s|{{VERSION}}|0.5.0|g" \
-		-e "s|{{HOMEPAGE}}|HOMEPAGE|g" \
+		-e "s|{{VERSION}}|$(EXT_VERSION)|g" \
+		-e "s|{{HOMEPAGE}}||g" \
 		-e "s|{{DOWNLOAD_URL_TEMPLATE}}|$(DOWNLOAD_URL_TEMPLATE_LOCAL)|g" \
-			extension.json.tmpl > extension.json
+			dfx/extension.json.tmpl > $(EXT_MANIFEST_LOCAL)
 
-bundle: build tmpl
+	@sed \
+		-e "s|{{NAME}}|$(EXT_NAME)|g" \
+		-e "s|{{VERSION}}|$(EXT_VERSION)|g" \
+		-e "s|{{HOMEPAGE}}|https://github.com/rikonor/dfx-extension-$(EXT_NAME)|g" \
+		-e "s|{{DOWNLOAD_URL_TEMPLATE}}|$(DOWNLOAD_URL_TEMPLATE_GITHUB)|g" \
+			dfx/extension.json.tmpl > $(EXT_MANIFEST_GITHUB)
+
+bundle: build manifest
 	@mkdir -p out
-	@cp target/$(TARGET)/$(EXT_NAME) out/$(EXT_NAME)
-	@cp extension.json out/extension.json
+	@cp $(CARGO_ARTIFACT_DIR)/$(EXT_NAME) out/
+	@cp $(EXT_MANIFEST) out/extension.json
 	@tar -czf $(EXT_NAME).tar.gz out
 	@rm -r out
 
 	@rm -rf www && mkdir -p www
-	@cp $(EXT_NAME).tar.gz www/$(EXT_NAME).tar.gz
-	@cp extension.json www/extension.json
-	@cp dependencies.json www/dependencies.json
+	@cp $(EXT_NAME).tar.gz dfx/dependencies.json www/
+	@cp $(EXT_MANIFEST) www/extension.json
 
 serve: bundle
 	@miniserve www \
 		-p $(PORT)
 
 check-serve:
-	@curl -s --head --fail http://localhost:8123 >/dev/null && echo "Server is up!" || { \
+	@curl -s --head --fail http://localhost:$(PORT) >/dev/null && echo "Server is up!" || { \
 		echo 'Please run "make serve" first' >&2; exit 1; \
 	}
 
 install: bundle check-serve
-	@$(DFX) extension uninstall $(EXT_NAME) || :
+	@$(DFX) extension uninstall $(EXT_NAME_INSTALLED) || :
+	@echo "Installing extension as $(EXT_NAME_INSTALLED)"
 	@$(DFX) extension install \
-		--install-as $(EXT_NAME) \
+		--install-as $(EXT_NAME_INSTALLED) \
 			http://localhost:$(PORT)/extension.json
 
-run: install
-	@$(DFX) $(EXT_NAME)
+run:
+	@$(DFX) $(EXT_NAME_INSTALLED)
+
+help:
+	@$(DFX) $(EXT_NAME_INSTALLED) --help

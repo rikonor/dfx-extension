@@ -1,5 +1,4 @@
 target
 www
 out
-dfx-extension.tar.gz
-extension.json
+*.tar.gz

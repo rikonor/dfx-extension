@@ -2,6 +2,10 @@
 name = "dfx-extension"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/rikonor/dfx-extension"
+
+[[bin]]
+name = "dfx-extension"
 
 [dependencies]
 anyhow = "1.0.95"
